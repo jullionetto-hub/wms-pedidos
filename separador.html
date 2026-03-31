@@ -1,0 +1,824 @@
+separador_html = r"""<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>WMS — Separador</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #1e2a3a; color: #e2e8f0; height: 100dvh; overflow: hidden; }
+
+    header { background: #253347; border-bottom: 3px solid #3b82f6; padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; height: 52px; }
+    .logo { color: #60a5fa; font-size: 16px; font-weight: 900; }
+    .logo span { color: #94a3b8; font-size: 10px; display: block; font-weight: normal; }
+    .header-info { color: #94a3b8; font-size: 11px; text-align: right; }
+    .header-info b { color: #60a5fa; }
+
+    .nav-mobile { display: none; background: #1a2535; border-bottom: 2px solid #2d4a6e; }
+    .nav-mobile button { flex: 1; padding: 10px 4px; background: none; border: none; color: #64748b; font-size: 11px; font-weight: 700; cursor: pointer; border-bottom: 3px solid transparent; letter-spacing: 0.5px; }
+    .nav-mobile button.ativa { color: #60a5fa; border-bottom-color: #3b82f6; }
+
+    .main { display: grid; grid-template-columns: 260px 1fr; gap: 12px; padding: 12px; height: calc(100dvh - 52px); overflow: hidden; }
+    .secao-mobile { display: none; }
+
+    .card { background: #253347; border: 1px solid #2d4a6e; border-radius: 12px; padding: 14px; }
+    .card-header { background: #2d4a6e; margin: -14px -14px 12px -14px; padding: 8px 14px; border-radius: 12px 12px 0 0; font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
+
+    .col-esq { display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
+    .id-field { margin-bottom: 8px; }
+    .id-field label { font-size: 10px; color: #60a5fa; font-weight: 700; letter-spacing: 1px; display: block; margin-bottom: 4px; }
+    .id-field input { width: 100%; padding: 9px 12px; background: #1a2535; border: 2px solid #3b82f6; border-radius: 8px; color: #e2e8f0; font-size: 15px; outline: none; }
+    .id-field input:focus { border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(59,130,246,0.25); }
+    .btn-entrar { width: 100%; padding: 12px; background: #2563eb; border: none; border-radius: 8px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; letter-spacing: 1px; transition: background 0.2s; }
+    .btn-entrar:hover { background: #3b82f6; }
+    .btn-sair { width: 100%; padding: 9px; background: transparent; border: 1px solid #dc2626; border-radius: 8px; color: #f87171; font-size: 12px; font-weight: 700; cursor: pointer; margin-top: 8px; display: none; transition: all 0.2s; }
+    .btn-sair:hover { background: #dc2626; color: white; }
+    .btn-sair.visivel { display: block; }
+    .operador-info { display: none; margin-top: 8px; background: #1a2d4a; border: 1px solid #2d4a6e; border-radius: 8px; padding: 8px 12px; }
+    .operador-info.ativo { display: flex; align-items: center; gap: 10px; }
+    .operador-nome { font-size: 14px; font-weight: 700; color: #60a5fa; }
+    .operador-status { font-size: 11px; color: #4ade80; }
+    #msg-login { color: #f87171; font-size: 11px; margin-top: 5px; display: none; }
+
+    .historico { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #253347; border: 1px solid #2d4a6e; border-radius: 12px; padding: 14px; min-height: 0; }
+    .historico-tabela { flex: 1; overflow-y: auto; min-height: 0; margin-top: 4px; }
+    .historico-tabela::-webkit-scrollbar { width: 5px; }
+    .historico-tabela::-webkit-scrollbar-thumb { background: #3b5a8a; border-radius: 10px; }
+    .historico table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .historico thead th { background: #1a2d4a; color: #64748b; font-size: 10px; letter-spacing: 1px; padding: 7px 10px; text-align: left; position: sticky; top: 0; }
+    .historico tbody tr:nth-child(even) { background: #1e2e42; }
+    .historico td { padding: 8px 10px; }
+
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+    .pill.pendente         { background: #1e3a5f; color: #93c5fd; }
+    .pill.separando        { background: #1d4ed8; color: #bfdbfe; }
+    .pill.concluido        { background: #15803d; color: #bbf7d0; }
+    .pill.aguardando-item  { background: #b45309; color: #fde68a; }
+
+    .col-dir { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+    .col-dir::-webkit-scrollbar { width: 5px; }
+    .col-dir::-webkit-scrollbar-thumb { background: #3b5a8a; border-radius: 10px; }
+
+    .contadores { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex-shrink: 0; }
+    .contador { border-radius: 10px; padding: 8px 14px; text-align: center; border: 1px solid; }
+    .contador.hoje { border-color: #16a34a; background: linear-gradient(135deg, #1a3324, #253347); }
+    .contador.mes  { border-color: #ca8a04; background: linear-gradient(135deg, #33280f, #253347); }
+    .contador.ano  { border-color: #2563eb; background: linear-gradient(135deg, #1a2d4a, #253347); }
+    .contador-label { font-size: 9px; font-weight: 700; letter-spacing: 2px; color: #94a3b8; margin-bottom: 2px; }
+    .contador-valor { font-size: 22px; font-weight: 900; line-height: 1; }
+    .contador.hoje .contador-valor { color: #4ade80; }
+    .contador.mes  .contador-valor { color: #fbbf24; }
+    .contador.ano  .contador-valor { color: #60a5fa; }
+    .contador-sub { font-size: 9px; color: #64748b; margin-top: 2px; }
+
+    .bip-field { display: flex; gap: 10px; }
+    .bip-input { flex: 1; padding: 14px 16px; background: #1a2535; border: 2px solid #3b82f6; border-radius: 10px; color: #60a5fa; font-size: 20px; font-weight: 700; outline: none; letter-spacing: 2px; }
+    .bip-input:focus { border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(59,130,246,0.25); }
+    .bip-input::placeholder { color: #3b5a8a; font-weight: 400; font-size: 13px; }
+    .btn-confirmar { padding: 14px 20px; background: #1a2d4a; border: 2px solid #3b82f6; border-radius: 10px; color: #60a5fa; font-size: 20px; cursor: pointer; transition: all 0.2s; }
+    .btn-confirmar:hover, .btn-confirmar:active { background: #2563eb; color: white; }
+    .status-atual { font-size: 11px; color: #94a3b8; margin-top: 6px; text-align: center; min-height: 18px; }
+
+    /* CHECKLIST */
+    .checklist-wrap { background: #253347; border: 1px solid #2d4a6e; border-radius: 12px; overflow: hidden; }
+    .checklist-header { background: #2d4a6e; padding: 10px 14px; font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
+    .checklist-progresso { height: 5px; background: #1a2535; }
+    .checklist-progresso-fill { height: 100%; background: #3b82f6; transition: width 0.4s; }
+    .checklist-lista { overflow-y: auto; max-height: 340px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .checklist-lista::-webkit-scrollbar { width: 5px; }
+    .checklist-lista::-webkit-scrollbar-thumb { background: #3b5a8a; border-radius: 10px; }
+
+    .item-card { border-radius: 10px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 10px; border: 1px solid; transition: all 0.2s; animation: fadeInUp 0.2s ease; }
+    .item-card.pendente   { background: #1e2a3a; border-color: #2d4a6e; }
+    .item-card.encontrado { background: #0f2d1a; border-color: #16a34a; }
+    .item-card.falta      { background: #2d0f0f; border-color: #dc2626; }
+    .item-card.parcial    { background: #2d1f0f; border-color: #b45309; }
+
+    .item-icone { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+    .item-card.pendente   .item-icone { background: #2d4a6e; }
+    .item-card.encontrado .item-icone { background: #15803d; }
+    .item-card.falta      .item-icone { background: #b91c1c; }
+    .item-card.parcial    .item-icone { background: #b45309; }
+
+    .item-info { flex: 1; min-width: 0; }
+    .item-cod  { font-size: 11px; font-weight: 700; color: #60a5fa; }
+    .item-card.encontrado .item-cod { color: #4ade80; }
+    .item-card.falta      .item-cod { color: #f87171; }
+    .item-card.parcial    .item-cod { color: #fbbf24; }
+    .item-desc { font-size: 12px; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-det  { font-size: 10px; color: #64748b; margin-top: 2px; }
+    .item-aviso { font-size: 10px; color: #fbbf24; margin-top: 3px; }
+
+    /* Campo parcial */
+    .parcial-wrap { margin-top: 8px; background: #1a2535; border: 1px solid #b45309; border-radius: 8px; padding: 8px 10px; display: none; }
+    .parcial-wrap.aberto { display: block; }
+    .parcial-wrap label { font-size: 10px; color: #fbbf24; font-weight: 700; display: block; margin-bottom: 4px; letter-spacing: 0.5px; }
+    .parcial-row { display: flex; gap: 8px; align-items: center; }
+    .parcial-input { flex: 1; padding: 8px 10px; background: #253347; border: 1px solid #b45309; border-radius: 6px; color: #fbbf24; font-size: 16px; font-weight: 700; outline: none; text-align: center; }
+    .parcial-input:focus { border-color: #f59e0b; }
+    .btn-parcial-ok { padding: 8px 14px; background: #b45309; border: none; border-radius: 6px; color: white; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .btn-parcial-ok:hover { background: #d97706; }
+    .parcial-info { font-size: 10px; color: #94a3b8; margin-top: 4px; }
+
+    .item-btns { display: flex; gap: 6px; flex-shrink: 0; }
+    .btn-item { width: 36px; height: 36px; border-radius: 8px; border: 2px solid; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; background: transparent; }
+    .btn-item.ok          { border-color: #16a34a; color: #4ade80; }
+    .btn-item.ok:hover    { background: #15803d; color: white; }
+    .btn-item.parcial-btn { border-color: #b45309; color: #fbbf24; font-size: 13px; font-weight: 700; }
+    .btn-item.parcial-btn:hover { background: #b45309; color: white; }
+    .btn-item.nok         { border-color: #dc2626; color: #f87171; }
+    .btn-item.nok:hover   { background: #dc2626; color: white; }
+    .btn-item:disabled    { opacity: 0.3; cursor: not-allowed; }
+
+    .checklist-footer { padding: 10px 12px; border-top: 1px solid #2d4a6e; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .btn-acao { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; min-width: 160px; }
+    .btn-acao.concluir              { background: #15803d; color: white; }
+    .btn-acao.concluir:hover:not(:disabled) { background: #16a34a; }
+    .btn-acao.aguardar              { background: #92400e; color: #fde68a; cursor: not-allowed; }
+    .btn-acao:disabled              { background: #1a2535; color: #4a5568; border: 1px solid #2d3748; cursor: not-allowed; }
+
+    /* FILA */
+    .fila { background: #253347; border: 1px solid #2d4a6e; border-radius: 12px; overflow: hidden; }
+    .fila-header { background: #2d4a6e; padding: 8px 14px; font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
+    .fila-tabela { overflow-y: auto; max-height: 200px; }
+    .fila-tabela::-webkit-scrollbar { width: 5px; }
+    .fila-tabela::-webkit-scrollbar-thumb { background: #3b5a8a; border-radius: 10px; }
+    .fila table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .fila thead th { background: #1a2d4a; color: #64748b; font-size: 10px; letter-spacing: 1px; padding: 8px 14px; text-align: left; position: sticky; top: 0; }
+    .fila tbody tr:nth-child(even) { background: #1e2e42; }
+    .fila tbody tr.meu { border-left: 3px solid #3b82f6; background: #1a2d4a !important; }
+    .fila td { padding: 10px 14px; }
+
+    .badge-fila { background: #2563eb; color: white; border-radius: 20px; padding: 1px 8px; font-size: 10px; font-weight: 700; }
+    .badge-meus { background: #15803d; color: white; border-radius: 20px; padding: 1px 8px; font-size: 10px; font-weight: 700; margin-left: 4px; }
+    .bloqueado { opacity: 0.35; pointer-events: none; filter: blur(1px); }
+
+    @media (max-width: 700px) {
+      body { overflow: auto; height: 100dvh; }
+      header { height: 48px; }
+      .logo { font-size: 14px; }
+      .logo span { display: none; }
+      .header-info { font-size: 10px; }
+      .main { display: none; }
+      .nav-mobile { display: flex; }
+      .secao-mobile { display: none; padding: 12px; flex-direction: column; gap: 12px; height: calc(100dvh - 48px - 43px); overflow-y: auto; }
+      .secao-mobile.ativa { display: flex; }
+      .secao-mobile::-webkit-scrollbar { width: 4px; }
+      .secao-mobile::-webkit-scrollbar-thumb { background: #3b5a8a; border-radius: 10px; }
+      .id-field input { font-size: 18px; padding: 12px; }
+      .btn-entrar { font-size: 16px; padding: 14px; }
+      .bip-input { font-size: 22px; padding: 16px; }
+      .btn-confirmar { padding: 16px 22px; font-size: 22px; }
+      .contador-valor { font-size: 26px; }
+      .checklist-lista { max-height: none; }
+      .item-desc { white-space: normal; }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">📦 WMS — Separador <span>Controle de Separação de Pedidos</span></div>
+  <div class="header-info">
+    <span id="data-hora">--/--/----</span><br>
+    <b id="header-turno">Turno: —</b>
+  </div>
+</header>
+
+<nav class="nav-mobile">
+  <button class="ativa" onclick="trocarSecao('login', this)">🔐 Login</button>
+  <button onclick="trocarSecao('bipe', this)">📷 Bipe</button>
+  <button onclick="trocarSecao('fila', this)">📌 Fila</button>
+  <button onclick="trocarSecao('historico-m', this)">📋 Histórico</button>
+</nav>
+
+<!-- DESKTOP -->
+<div class="main">
+  <div class="col-esq">
+    <div class="card">
+      <div class="card-header">🔐 IDENTIFICAÇÃO DO OPERADOR</div>
+      <div class="id-field">
+        <label>ID DO OPERADOR</label>
+        <input type="text" id="input-matricula" placeholder="Ex: 001" maxlength="20" />
+      </div>
+      <p id="msg-login"></p>
+      <button class="btn-entrar" id="btn-entrar" onclick="identificar()">▶ ENTRAR</button>
+      <button class="btn-sair" id="btn-sair" onclick="sair()">✖ SAIR / TROCAR OPERADOR</button>
+      <div class="operador-info" id="operador-info">
+        <div style="font-size:24px">👤</div>
+        <div>
+          <div class="operador-nome" id="operador-nome">—</div>
+          <div class="operador-status">✅ Operador identificado</div>
+        </div>
+      </div>
+    </div>
+    <div class="historico bloqueado" id="historico">
+      <div class="card-header">📋 HISTÓRICO DO DIA</div>
+      <div class="historico-tabela">
+        <table>
+          <thead><tr><th>Nº PEDIDO</th><th>STATUS</th><th>HORA</th></tr></thead>
+          <tbody id="tbody-historico">
+            <tr><td colspan="3" style="color:#64748b;text-align:center;padding:20px">Faça login para ver</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-dir bloqueado" id="col-dir">
+    <div class="contadores">
+      <div class="contador hoje"><div class="contador-label">HOJE</div><div class="contador-valor" id="cnt-hoje">0</div><div class="contador-sub">pedidos</div></div>
+      <div class="contador mes"><div class="contador-label">MÊS</div><div class="contador-valor" id="cnt-mes">0</div><div class="contador-sub">pedidos</div></div>
+      <div class="contador ano"><div class="contador-label">ANO</div><div class="contador-valor" id="cnt-ano">0</div><div class="contador-sub">pedidos</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header">📷 LEITURA DE PEDIDO</div>
+      <div class="bip-field">
+        <input type="text" class="bip-input" id="input-pedido" placeholder="🔍 Digite ou bipe o pedido..." />
+        <button class="btn-confirmar" onclick="confirmarPedido()">✔</button>
+      </div>
+      <div class="status-atual" id="status-atual"></div>
+    </div>
+
+    <!-- CHECKLIST DESKTOP -->
+    <div class="checklist-wrap" id="checklist-wrap" style="display:none">
+      <div class="checklist-header">
+        <span id="checklist-titulo">📋 ITENS DO PEDIDO</span>
+        <span id="checklist-contador" style="color:#60a5fa">0/0</span>
+      </div>
+      <div class="checklist-progresso">
+        <div class="checklist-progresso-fill" id="checklist-barra" style="width:0%"></div>
+      </div>
+      <div class="checklist-lista" id="checklist-lista"></div>
+      <div class="checklist-footer">
+        <div style="font-size:11px;color:#94a3b8;flex:1" id="checklist-resumo"></div>
+        <button class="btn-acao concluir" id="btn-concluir-desktop" onclick="concluirPedido('')" disabled>
+          🔒 CONCLUIR PEDIDO
+        </button>
+        <button class="btn-acao aguardar" id="btn-aguardar-desktop" style="display:none">
+          ⏳ AGUARDANDO REPOSITOR
+        </button>
+      </div>
+    </div>
+
+    <div class="fila">
+      <div class="fila-header">
+        📌 FILA GERAL
+        <div>
+          <span id="badge-meus" class="badge-meus">0 meus</span>
+          <span id="badge-fila" class="badge-fila">0 total</span>
+        </div>
+      </div>
+      <div class="fila-tabela">
+        <table>
+          <thead><tr><th>Nº PEDIDO</th><th>ITENS</th><th>STATUS</th><th>SITUAÇÃO</th></tr></thead>
+          <tbody id="tbody-fila"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE -->
+<section class="secao-mobile ativa" id="sec-login">
+  <div class="card">
+    <div class="card-header">🔐 IDENTIFICAÇÃO DO OPERADOR</div>
+    <div class="id-field">
+      <label>ID DO OPERADOR</label>
+      <input type="text" id="m-input-matricula" placeholder="Ex: 001" maxlength="20" inputmode="numeric" />
+    </div>
+    <p id="m-msg-login" style="color:#f87171;font-size:12px;margin-top:4px;display:none"></p>
+    <button class="btn-entrar" id="m-btn-entrar" onclick="identificarMobile()" style="margin-top:8px">▶ ENTRAR</button>
+    <button class="btn-sair" id="m-btn-sair" onclick="sairMobile()">✖ SAIR / TROCAR OPERADOR</button>
+    <div class="operador-info" id="m-operador-info">
+      <div style="font-size:24px">👤</div>
+      <div>
+        <div class="operador-nome" id="m-operador-nome">—</div>
+        <div class="operador-status">✅ Operador identificado</div>
+      </div>
+    </div>
+  </div>
+  <div class="contadores">
+    <div class="contador hoje"><div class="contador-label">HOJE</div><div class="contador-valor" id="m-cnt-hoje">0</div><div class="contador-sub">pedidos</div></div>
+    <div class="contador mes"><div class="contador-label">MÊS</div><div class="contador-valor" id="m-cnt-mes">0</div><div class="contador-sub">pedidos</div></div>
+    <div class="contador ano"><div class="contador-label">ANO</div><div class="contador-valor" id="m-cnt-ano">0</div><div class="contador-sub">pedidos</div></div>
+  </div>
+</section>
+
+<section class="secao-mobile" id="sec-bipe">
+  <div class="card bloqueado" id="m-card-bipe">
+    <div class="card-header">📷 LEITURA DE PEDIDO</div>
+    <div class="bip-field">
+      <input type="text" class="bip-input" id="m-input-pedido" placeholder="🔍 Digite o pedido..." inputmode="numeric" />
+      <button class="btn-confirmar" onclick="confirmarPedidoMobile()">✔</button>
+    </div>
+    <div class="status-atual" id="m-status-atual"></div>
+  </div>
+
+  <!-- CHECKLIST MOBILE -->
+  <div class="checklist-wrap" id="m-checklist-wrap" style="display:none">
+    <div class="checklist-header">
+      <span id="m-checklist-titulo">📋 ITENS DO PEDIDO</span>
+      <span id="m-checklist-contador" style="color:#60a5fa">0/0</span>
+    </div>
+    <div class="checklist-progresso">
+      <div class="checklist-progresso-fill" id="m-checklist-barra" style="width:0%"></div>
+    </div>
+    <div class="checklist-lista" id="m-checklist-lista"></div>
+    <div class="checklist-footer">
+      <div style="font-size:11px;color:#94a3b8;flex:1" id="m-checklist-resumo"></div>
+      <button class="btn-acao concluir" id="m-btn-concluir" onclick="concluirPedido('m-')" disabled>
+        🔒 CONCLUIR PEDIDO
+      </button>
+      <button class="btn-acao aguardar" id="m-btn-aguardar" style="display:none">
+        ⏳ AGUARDANDO REPOSITOR
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="secao-mobile" id="sec-fila">
+  <div class="fila">
+    <div class="fila-header">
+      📌 FILA GERAL
+      <div>
+        <span id="m-badge-meus" class="badge-meus">0 meus</span>
+        <span id="m-badge-fila" class="badge-fila">0 total</span>
+      </div>
+    </div>
+    <div class="fila-tabela" style="max-height:none">
+      <table>
+        <thead><tr><th>Nº PEDIDO</th><th>ITENS</th><th>STATUS</th><th>SITUAÇÃO</th></tr></thead>
+        <tbody id="m-tbody-fila"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="secao-mobile" id="sec-historico-m">
+  <div class="historico" style="flex:unset;min-height:300px">
+    <div class="card-header" style="background:#2d4a6e;margin:-14px -14px 12px -14px;padding:8px 14px;border-radius:12px 12px 0 0;font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:1px">📋 HISTÓRICO DO DIA</div>
+    <div class="historico-tabela" style="max-height:none">
+      <table>
+        <thead><tr><th>Nº PEDIDO</th><th>STATUS</th><th>HORA</th></tr></thead>
+        <tbody id="m-tbody-historico"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<script>
+  const API = `http://${location.hostname === 'localhost' ? 'localhost' : location.hostname}:3000`;
+  let separadorAtual    = null;
+  let pedidoAtualId     = null;
+  let pedidoAtualNum    = null;
+  let pedidoAtualStatus = null;
+  let itensAtuais       = [];
+  let prefixoAtivo      = '';
+  const isMobile = () => window.innerWidth <= 700;
+
+  /* RELÓGIO */
+  function atualizarRelogio() {
+    const agora = new Date();
+    document.getElementById('data-hora').textContent = agora.toLocaleString('pt-BR');
+  }
+  setInterval(atualizarRelogio, 1000);
+  atualizarRelogio();
+
+  /* NAV MOBILE */
+  function trocarSecao(id, btn) {
+    document.querySelectorAll('.secao-mobile').forEach(s => s.classList.remove('ativa'));
+    document.querySelectorAll('.nav-mobile button').forEach(b => b.classList.remove('ativa'));
+    document.getElementById(`sec-${id}`).classList.add('ativa');
+    btn.classList.add('ativa');
+  }
+
+  /* TOAST */
+  function toast(msg, tipo = 'info') {
+    const cores = { info:'#2563eb', sucesso:'#15803d', erro:'#dc2626', aviso:'#b45309' };
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;background:${cores[tipo]};color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,0.4);max-width:90vw;text-align:center;line-height:1.4;animation:fadeInUp .2s ease;`;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+  }
+
+  function mostrarStatusAtual(num, status, prefixo) {
+    const labels = { 'separando':'🔵 Separando','aguardando item':'🟡 Aguardando Item','concluido':'🟢 Concluído','pendente':'⚪ Pendente' };
+    const el = document.getElementById(`${prefixo}status-atual`);
+    if (!el) return;
+    el.innerHTML = num ? `Pedido <b style="color:#e2e8f0">${num}</b> — ${labels[status]||status}` : '';
+  }
+
+  /* LOGIN DESKTOP */
+  async function identificar() {
+    const matricula = document.getElementById('input-matricula').value.trim();
+    const msg = document.getElementById('msg-login');
+    if (!matricula) { msg.style.display='block'; msg.textContent='Informe o ID!'; return; }
+    try {
+      const res = await fetch(`${API}/separadores/matricula/${matricula}`);
+      if (!res.ok) { msg.style.display='block'; msg.textContent='ID não encontrado!'; return; }
+      separadorAtual = await res.json();
+      if (separadorAtual.status === 'inativo') { msg.style.display='block'; msg.textContent='Operador inativo!'; separadorAtual=null; return; }
+      msg.style.display='none';
+      document.getElementById('operador-nome').textContent = separadorAtual.nome;
+      document.getElementById('operador-info').classList.add('ativo');
+      document.getElementById('header-turno').textContent = `Turno: ${separadorAtual.turno}`;
+      document.getElementById('btn-entrar').style.display = 'none';
+      document.getElementById('input-matricula').disabled = true;
+      document.getElementById('btn-sair').classList.add('visivel');
+      ['col-dir','historico'].forEach(id => document.getElementById(id).classList.remove('bloqueado'));
+      carregarTudo();
+      toast(`Bem-vindo, ${separadorAtual.nome}!`, 'sucesso');
+      setTimeout(() => document.getElementById('input-pedido').focus(), 300);
+    } catch(e) { msg.style.display='block'; msg.textContent='Erro ao conectar!'; }
+  }
+
+  function sair() {
+    if (!confirm('Deseja sair?')) return;
+    resetarSessao();
+    document.getElementById('btn-entrar').style.display='block';
+    document.getElementById('input-matricula').disabled=false;
+    document.getElementById('btn-sair').classList.remove('visivel');
+    document.getElementById('operador-info').classList.remove('ativo');
+    document.getElementById('input-matricula').value='';
+    document.getElementById('input-pedido').value='';
+    esconderChecklist('');
+    ['col-dir','historico'].forEach(id => document.getElementById(id).classList.add('bloqueado'));
+    document.getElementById('tbody-historico').innerHTML='<tr><td colspan="3" style="color:#64748b;text-align:center;padding:20px">Faça login para ver</td></tr>';
+  }
+
+  async function confirmarPedido() { prefixoAtivo=''; await _bipar('input-pedido',''); }
+
+  /* LOGIN MOBILE */
+  async function identificarMobile() {
+    const matricula = document.getElementById('m-input-matricula').value.trim();
+    const msg = document.getElementById('m-msg-login');
+    if (!matricula) { msg.style.display='block'; msg.textContent='Informe o ID!'; return; }
+    try {
+      const res = await fetch(`${API}/separadores/matricula/${matricula}`);
+      if (!res.ok) { msg.style.display='block'; msg.textContent='ID não encontrado!'; return; }
+      separadorAtual = await res.json();
+      if (separadorAtual.status === 'inativo') { msg.style.display='block'; msg.textContent='Operador inativo!'; separadorAtual=null; return; }
+      msg.style.display='none';
+      document.getElementById('m-operador-nome').textContent = separadorAtual.nome;
+      document.getElementById('m-operador-info').classList.add('ativo');
+      document.getElementById('header-turno').textContent = `Turno: ${separadorAtual.turno}`;
+      document.getElementById('m-btn-entrar').style.display='none';
+      document.getElementById('m-input-matricula').disabled=true;
+      document.getElementById('m-btn-sair').classList.add('visivel');
+      document.getElementById('m-card-bipe').classList.remove('bloqueado');
+      carregarTudo();
+      toast(`Bem-vindo, ${separadorAtual.nome}!`, 'sucesso');
+      document.querySelectorAll('.nav-mobile button')[1].click();
+    } catch(e) { msg.style.display='block'; msg.textContent='Erro ao conectar!'; }
+  }
+
+  function sairMobile() {
+    if (!confirm('Deseja sair?')) return;
+    resetarSessao();
+    document.getElementById('m-btn-entrar').style.display='block';
+    document.getElementById('m-input-matricula').disabled=false;
+    document.getElementById('m-btn-sair').classList.remove('visivel');
+    document.getElementById('m-operador-info').classList.remove('ativo');
+    document.getElementById('m-input-matricula').value='';
+    document.getElementById('m-input-pedido').value='';
+    esconderChecklist('m-');
+    document.getElementById('m-card-bipe').classList.add('bloqueado');
+    document.querySelectorAll('.nav-mobile button')[0].click();
+  }
+
+  async function confirmarPedidoMobile() { prefixoAtivo='m-'; await _bipar('m-input-pedido','m-'); }
+
+  /* RESET */
+  function resetarSessao() {
+    separadorAtual=null; pedidoAtualId=null; pedidoAtualNum=null;
+    pedidoAtualStatus=null; itensAtuais=[]; prefixoAtivo='';
+    document.getElementById('header-turno').textContent='Turno: —';
+    ['cnt-hoje','cnt-mes','cnt-ano','m-cnt-hoje','m-cnt-mes','m-cnt-ano'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.textContent='0';
+    });
+    mostrarStatusAtual(null,null,'');
+    mostrarStatusAtual(null,null,'m-');
+  }
+
+  /* BIPAR */
+  async function _bipar(inputId, prefixo) {
+    const num = document.getElementById(inputId).value.trim();
+    if (!num)            { toast('Bipe ou digite o número do pedido!','aviso'); return; }
+    if (!separadorAtual) { toast('Faça login primeiro!','erro'); return; }
+    try {
+      const res = await fetch(`${API}/pedidos/bipar`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ numero_pedido: num, separador_id: separadorAtual.id })
+      });
+      const data = await res.json();
+      if (res.status === 404) { toast('❌ Pedido não encontrado!','erro'); document.getElementById(inputId).value=''; return; }
+      if (res.status === 409) { toast(`⚠️ ${data.erro}`,'aviso'); document.getElementById(inputId).value=''; return; }
+      if (res.status === 400 && data.status === 'concluido') { toast('✅ Este pedido já foi concluído!','aviso'); document.getElementById(inputId).value=''; return; }
+      if (!res.ok) { toast(`❌ ${data.erro}`,'erro'); return; }
+
+      pedidoAtualId     = data.pedido_id;
+      pedidoAtualNum    = num;
+      pedidoAtualStatus = data.status;
+
+      mostrarStatusAtual(num, pedidoAtualStatus, prefixo);
+      toast(data.ja_atribuido ? `Pedido ${num} carregado` : `✅ Pedido ${num} → SEPARANDO`, data.ja_atribuido ? 'info' : 'sucesso');
+      await carregarChecklist(prefixo);
+      carregarTudo();
+    } catch(e) { toast('Erro ao conectar!','erro'); }
+  }
+
+  /* CHECKLIST */
+  async function carregarChecklist(prefixo) {
+    if (!pedidoAtualId) return;
+    try {
+      const res = await fetch(`${API}/pedidos/${pedidoAtualId}/itens`);
+      itensAtuais = await res.json();
+      if (!itensAtuais.length) { esconderChecklist(prefixo); return; }
+      document.getElementById(`${prefixo}checklist-wrap`).style.display = 'block';
+      renderChecklist(prefixo);
+    } catch(e) { toast('Erro ao carregar itens!','erro'); }
+  }
+
+  function renderChecklist(prefixo) {
+    const total       = itensAtuais.length;
+    const verificados = itensAtuais.filter(i => i.status !== 'pendente').length;
+    const encontrados = itensAtuais.filter(i => i.status === 'encontrado').length;
+    const faltas      = itensAtuais.filter(i => i.status === 'falta').length;
+    const parciais    = itensAtuais.filter(i => i.status === 'parcial').length;
+    const pct         = total > 0 ? Math.round((verificados / total) * 100) : 0;
+    const todosVerif  = verificados === total;
+    const temProblema = faltas > 0 || parciais > 0;
+
+    document.getElementById(`${prefixo}checklist-titulo`).textContent   = `📋 PEDIDO #${pedidoAtualNum}`;
+    document.getElementById(`${prefixo}checklist-contador`).textContent = `${verificados}/${total} itens`;
+    document.getElementById(`${prefixo}checklist-barra`).style.width    = `${pct}%`;
+    document.getElementById(`${prefixo}checklist-resumo`).innerHTML     =
+      `✅ ${encontrados} ok &nbsp;🟡 ${parciais} parcial &nbsp;❌ ${faltas} falta &nbsp;⬜ ${total-verificados} pendente`;
+
+    const btnConcluir = document.getElementById(prefixo === 'm-' ? 'm-btn-concluir' : 'btn-concluir-desktop');
+    const btnAguardar = document.getElementById(prefixo === 'm-' ? 'm-btn-aguardar' : 'btn-aguardar-desktop');
+
+    if (btnConcluir && btnAguardar) {
+      if (!todosVerif) {
+        // Ainda tem pendentes — bloqueia
+        btnConcluir.style.display = 'block';
+        btnConcluir.disabled = true;
+        btnConcluir.textContent = `🔒 CONCLUIR (${total-verificados} pendentes)`;
+        btnAguardar.style.display = 'none';
+
+      } else if (temProblema) {
+        // Verifica se repositor já resolveu todos os avisos
+        const itensComProblema = itensAtuais.filter(i => i.status === 'falta' || i.status === 'parcial');
+        const todosResolvidos  = itensComProblema.every(i =>
+          i.aviso_status === 'reposto' || i.aviso_status === 'nao_encontrado'
+        );
+
+        if (todosResolvidos) {
+          // Repositor resolveu tudo — libera Concluir
+          btnConcluir.style.display = 'block';
+          btnConcluir.disabled = false;
+          btnConcluir.textContent = '✅ CONCLUIR PEDIDO';
+          btnAguardar.style.display = 'none';
+        } else {
+          // Repositor ainda pendente — bloqueia Concluir
+          const qtdPendente = itensComProblema.filter(i =>
+            i.aviso_status !== 'reposto' && i.aviso_status !== 'nao_encontrado'
+          ).length;
+          btnConcluir.style.display = 'none';
+          btnAguardar.style.display = 'block';
+          btnAguardar.textContent = `⏳ AGUARDANDO REPOSITOR (${qtdPendente} item${qtdPendente > 1 ? 's' : ''})`;
+        }
+
+      } else {
+        // Todos encontrados — libera Concluir direto
+        btnConcluir.style.display = 'block';
+        btnConcluir.disabled = false;
+        btnConcluir.textContent = '✅ CONCLUIR PEDIDO';
+        btnAguardar.style.display = 'none';
+      }
+    }
+
+    // Lista de itens
+    const lista = document.getElementById(`${prefixo}checklist-lista`);
+    lista.innerHTML = itensAtuais.map(item => {
+      const icones    = { pendente:'⬜', encontrado:'✅', falta:'❌', parcial:'🟡' };
+      const verificado = item.status !== 'pendente';
+
+      const btnOk = verificado
+        ? `<button class="btn-item ok" disabled>✔</button>`
+        : `<button class="btn-item ok" onclick="verificarItem(${item.id},'encontrado','${prefixo}')">✔</button>`;
+
+      const btnParcial = verificado
+        ? `<button class="btn-item parcial-btn" disabled>±</button>`
+        : `<button class="btn-item parcial-btn" onclick="toggleParcial(${item.id},'${prefixo}')" title="Parcial">±</button>`;
+
+      const btnNok = verificado
+        ? `<button class="btn-item nok" disabled>✖</button>`
+        : `<button class="btn-item nok" onclick="verificarItem(${item.id},'falta','${prefixo}')">✖</button>`;
+
+      return `
+        <div class="item-card ${item.status}" id="item-card-${item.id}">
+          <div class="item-icone">${icones[item.status] || '⬜'}</div>
+          <div class="item-info" style="flex:1;min-width:0">
+            <div class="item-cod">${item.codigo || '—'} &nbsp;•&nbsp; 📍 ${item.endereco || '—'}</div>
+            <div class="item-desc">${item.descricao || '—'}</div>
+            <div class="item-det">
+              Qtd pedida: <b style="color:#e2e8f0">${item.quantidade || 1}</b>
+              ${item.hora_verificado ? `&nbsp;•&nbsp; ${item.hora_verificado}` : ''}
+            </div>
+            ${item.status === 'falta'   ? `<div class="item-aviso">❌ Falta total — repositor avisado</div>` : ''}
+            ${item.status === 'parcial' ? `<div class="item-aviso">🟡 ${item.obs || ''} — repositor avisado</div>` : ''}
+            ${(item.status === 'falta' || item.status === 'parcial') && item.aviso_status === 'reposto'
+              ? `<div style="font-size:10px;color:#4ade80;margin-top:3px">✅ Repositor repôs o item!</div>` : ''}
+            ${(item.status === 'falta' || item.status === 'parcial') && item.aviso_status === 'nao_encontrado'
+              ? `<div style="font-size:10px;color:#f87171;margin-top:3px">🚫 Repositor não encontrou no estoque</div>` : ''}
+
+            <!-- Campo parcial -->
+            <div class="parcial-wrap" id="parcial-wrap-${item.id}">
+              <label>Quantidade encontrada (de ${item.quantidade || 1}):</label>
+              <div class="parcial-row">
+                <input type="number" class="parcial-input" id="parcial-input-${item.id}"
+                  min="0" max="${(item.quantidade||1)-1}" placeholder="0" inputmode="numeric" />
+                <button class="btn-parcial-ok" onclick="confirmarParcial(${item.id},'${prefixo}',${item.quantidade||1})">
+                  Confirmar
+                </button>
+              </div>
+              <div class="parcial-info">Digite quantas unidades você encontrou</div>
+            </div>
+          </div>
+          <div class="item-btns">${btnOk}${btnParcial}${btnNok}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function toggleParcial(itemId, prefixo) {
+    const wrap = document.getElementById(`parcial-wrap-${itemId}`);
+    if (!wrap) return;
+    const aberto = wrap.classList.toggle('aberto');
+    if (aberto) setTimeout(() => { document.getElementById(`parcial-input-${itemId}`)?.focus(); }, 100);
+  }
+
+  async function confirmarParcial(itemId, prefixo, qtdTotal) {
+    const input = document.getElementById(`parcial-input-${itemId}`);
+    const qtdEncontrada = parseInt(input?.value);
+    if (isNaN(qtdEncontrada) || qtdEncontrada < 0) { toast('Digite uma quantidade válida!','aviso'); return; }
+    if (qtdEncontrada >= qtdTotal) { toast('Se encontrou tudo, use o botão ✔!','aviso'); return; }
+    const qtdFalta = qtdTotal - qtdEncontrada;
+    const obs = `Encontrou ${qtdEncontrada} de ${qtdTotal} — faltam ${qtdFalta}`;
+    await verificarItem(itemId, 'parcial', prefixo, obs, qtdFalta);
+  }
+
+  async function verificarItem(itemId, status, prefixo, obs = '', qtdFalta = 0) {
+    if (!separadorAtual) return;
+    try {
+      const item = itensAtuais.find(i => i.id === itemId);
+      const res = await fetch(`${API}/itens/${itemId}/verificar`, {
+        method: 'PUT',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          status,
+          obs,
+          qtd_falta:      status === 'falta' ? (item?.quantidade || 1) : qtdFalta,
+          separador_id:   separadorAtual.id,
+          separador_nome: separadorAtual.nome
+        })
+      });
+      await res.json();
+
+      if (item) { item.status = status; item.obs = obs; item.aviso_status = ''; }
+
+      if (status === 'falta')    toast('❌ Falta total registrada — repositor avisado!','aviso');
+      if (status === 'parcial')  toast(`🟡 Parcial registrado — repositor avisado das ${qtdFalta} unidades!`,'aviso');
+      if (status === 'encontrado') toast('✅ Item confirmado!','sucesso');
+
+      renderChecklist(prefixo);
+    } catch(e) { toast('Erro ao verificar item!','erro'); }
+  }
+
+  async function concluirPedido(prefixo) {
+    if (!pedidoAtualId) return;
+    try {
+      const res  = await fetch(`${API}/pedidos/${pedidoAtualId}/concluir`, { method: 'PUT' });
+      const data = await res.json();
+
+      if (data.aguardando) { toast('⏳ Ainda aguardando o repositor!','aviso'); return; }
+      if (data.erro)       { toast(`⚠️ ${data.erro}`,'aviso'); return; }
+
+      toast(`🎉 Pedido ${pedidoAtualNum} CONCLUÍDO!`, 'sucesso');
+      esconderChecklist(prefixo);
+      const inputId = prefixo === 'm-' ? 'm-input-pedido' : 'input-pedido';
+      document.getElementById(inputId).value = '';
+      mostrarStatusAtual(null, null, prefixo);
+      pedidoAtualId=null; pedidoAtualNum=null; pedidoAtualStatus=null; itensAtuais=[];
+      carregarTudo();
+      setTimeout(() => document.getElementById(inputId).focus(), 300);
+    } catch(e) { toast('Erro ao concluir pedido!','erro'); }
+  }
+
+  function esconderChecklist(prefixo) {
+    const wrap = document.getElementById(`${prefixo}checklist-wrap`);
+    if (wrap) wrap.style.display = 'none';
+  }
+
+  function carregarTudo() { carregarContadores(); carregarHistorico(); carregarFila(); }
+
+  async function carregarContadores() {
+    if (!separadorAtual) return;
+    try {
+      const res   = await fetch(`${API}/produtividade?separador_id=${separadorAtual.id}`);
+      const dados = await res.json();
+      if (dados.length > 0) {
+        [['cnt-hoje','hoje'],['cnt-mes','mes'],['cnt-ano','total_ano'],
+         ['m-cnt-hoje','hoje'],['m-cnt-mes','mes'],['m-cnt-ano','total_ano']].forEach(([id,key])=>{
+          const el=document.getElementById(id); if(el) el.textContent=dados[0][key]||0;
+        });
+      }
+    } catch(e) {}
+  }
+
+  async function carregarHistorico() {
+    if (!separadorAtual) return;
+    try {
+      const hoje = new Date().toISOString().split('T')[0];
+      const res  = await fetch(`${API}/pedidos?separador_id=${separadorAtual.id}&data=${hoje}`);
+      const pedidos = await res.json();
+      const html = !pedidos.length
+        ? '<tr><td colspan="3" style="color:#64748b;text-align:center;padding:20px">Nenhum pedido hoje</td></tr>'
+        : pedidos.map(p=>`
+            <tr>
+              <td style="color:#cbd5e1">${p.numero_pedido}</td>
+              <td><span class="pill ${p.status.replace(/ /g,'-')}">${p.status}</span></td>
+              <td style="color:#64748b">${p.hora_pedido||'--:--'}</td>
+            </tr>`).join('');
+      ['tbody-historico','m-tbody-historico'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
+    } catch(e) {}
+  }
+
+  async function carregarFila() {
+    if (!separadorAtual) return;
+    try {
+      const res    = await fetch(`${API}/pedidos`);
+      const todos  = await res.json();
+      const ativos = todos.filter(p => p.status !== 'concluido');
+      const meus   = ativos.filter(p => p.separador_id === separadorAtual.id);
+
+      ['badge-fila','m-badge-fila'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=`${ativos.length} total`;});
+      ['badge-meus','m-badge-meus'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=`${meus.length} meus`;});
+
+      const html = !ativos.length
+        ? '<tr><td colspan="4" style="color:#64748b;text-align:center;padding:20px">Nenhum pedido na fila</td></tr>'
+        : ativos.map(p => {
+            const eMeu    = p.separador_id === separadorAtual.id;
+            const ocupado = p.separador_id && p.separador_id !== separadorAtual.id;
+            const situacao = eMeu
+              ? `<span class="pill separando">Meu</span>`
+              : ocupado
+                ? `<span class="pill aguardando-item">Ocupado</span>`
+                : `<span class="pill pendente">Livre</span>`;
+            const click = !ocupado ? `onclick="selecionarPedido('${p.numero_pedido}')" style="cursor:pointer"` : '';
+            return `<tr class="${eMeu?'meu':''}" ${click}>
+              <td style="color:${eMeu?'#60a5fa':'#cbd5e1'};font-weight:${eMeu?700:400}">${p.numero_pedido}</td>
+              <td style="color:#e2e8f0">${p.itens||'—'}</td>
+              <td><span class="pill ${(p.status||'').replace(/ /g,'-')}">${p.status||'—'}</span></td>
+              <td>${situacao}</td>
+            </tr>`;
+          }).join('');
+
+      ['tbody-fila','m-tbody-fila'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
+    } catch(e) {}
+  }
+
+  function selecionarPedido(n) {
+    if (isMobile()) {
+      document.getElementById('m-input-pedido').value=n;
+      document.querySelectorAll('.nav-mobile button')[1].click();
+      confirmarPedidoMobile();
+    } else {
+      document.getElementById('input-pedido').value=n;
+      confirmarPedido();
+    }
+  }
+
+  document.getElementById('input-matricula').addEventListener('keypress',   e=>{if(e.key==='Enter')identificar();});
+  document.getElementById('input-pedido').addEventListener('keypress',      e=>{if(e.key==='Enter')confirmarPedido();});
+  document.getElementById('m-input-matricula').addEventListener('keypress', e=>{if(e.key==='Enter')identificarMobile();});
+  document.getElementById('m-input-pedido').addEventListener('keypress',    e=>{if(e.key==='Enter')confirmarPedidoMobile();});
+
+  setInterval(()=>{ if(separadorAtual) carregarTudo(); }, 30000);
+</script>
+</body>
+</html>"""
+
+with open("separador.html", "w", encoding="utf-8") as f:
+    f.write(separador_html)
+
+print("separador.html OK:", os.path.exists("separador.html"))
+print("Tamanho:", len(separador_html), "chars")
