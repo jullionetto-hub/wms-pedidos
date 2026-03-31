@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: wms-pedidos
+    env: node
+    buildCommand: npm install && npm rebuild sqlite3 --build-from-source
+    startCommand: node server.js
